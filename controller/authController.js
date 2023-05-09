@@ -1,26 +1,7 @@
-const Token = require("../models/tokenModel");
 const speakeasy = require("speakeasy");
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const qrcode = require("qrcode");
-
-// exports.generateSecret = async (req, res, next) => {
-//   const secretToken = speakeasy.generateSecret();
-//   try {
-//     const token = await Token.create({ secret: secretToken.base32 });
-//     return res.status(201).json({
-//       status: "success",
-//       message: "secret token generated",
-//       token: secretToken.base32,
-//       tokenId: token.id,
-//     });
-//   } catch (error) {
-//     return res.status(400).json({
-//       error: true,
-//       message: error.message || "something went wrong",
-//     });
-//   }
-// };
 
 exports.signup = async (req, res, next) => {
   const secretToken = speakeasy.generateSecret();
@@ -75,33 +56,6 @@ exports.signup = async (req, res, next) => {
 //     console.log(error);
 //     res.status(400).json({ error: true, message: error.message });
 //   }
-// };
-
-// exports.verifyToken = async (req, res, next) => {
-//   const secretToken = await Token.findById(req.params.id);
-//   const enteredToken = req.body.token;
-
-//   console.log(secretToken);
-//   console.log(secretToken.secret);
-
-//   const verified = speakeasy.totp.verify({
-//     secret: secretToken.secret,
-//     encoding: "base32",
-//     token: enteredToken,
-//   });
-//   if (!verified) {
-//     return res.status(403).json({
-//       message: "verification failed",
-//     });
-//   }
-//   secretToken.authIsSet = true;
-//   console.log(secretToken.authIsSet);
-
-//   return res.status(200).json({
-//     status: "success",
-//     message: "verification successful",
-//     verified: verified,
-//   });
 // };
 
 exports.login = async (req, res, next) => {
