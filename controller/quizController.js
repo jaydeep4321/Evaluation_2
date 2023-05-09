@@ -1,3 +1,4 @@
+const { Socket } = require("socket.io");
 const Quiz = require("../models/quizModel");
 
 exports.createQuiz = async (req, res, next) => {
@@ -22,6 +23,10 @@ exports.createQuiz = async (req, res, next) => {
 exports.getAllQuizzes = async (req, res, next) => {
   try {
     const quizzes = await Quiz.find();
+
+    // const socket = req.app.get("socket");
+    // socket.emit("quiz", quizzes);
+    // global.io.emit("news", { hello: "world" });
     res
       .status(200)
       .json({ error: false, message: "Quizzes found!", data: quizzes });
@@ -69,7 +74,9 @@ exports.updateQuiz = async (req, res, next) => {
 
 exports.deleteQuiz = async (req, res, next) => {
   try {
-    const quiz = await Quiz.findByIdAndDelete(req.params.id);
+    const quiz = await Quiz.findByIdAndUpdate(req.params.id, {
+      $set: { active: false },
+    });
 
     if (!quiz) {
       return res.status(404).json({ error: true, message: "Quiz not found" });

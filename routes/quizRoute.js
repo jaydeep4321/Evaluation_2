@@ -8,6 +8,8 @@ router
   .post(quizController.createQuiz)
   .get(quizController.getAllQuizzes);
 
+router.route("/data").get(quizController.getAllQuizzes);
+
 router
   .route("/:id")
   .get(quizController.getQuiz)

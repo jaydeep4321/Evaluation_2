@@ -1,3 +1,19 @@
 npm uninstall bcrypt
 npm install bcryptjs
 npm install bcrypt
+
+
+// Creating object of Socket
+const liveData = io.of("/liveData") // URL which will accept socket connection
+// Socket event
+liveData.on("user-connected",(username)=>{
+ console.log(`Receiver ${username} connected..`) // Logging when user is connected
+});
+// Get request on home page
+app.get('/', (req, res) => res.send(‘Hello This is our Home Page’))
+// Post request on home page
+app.post('/',(req, res) => {
+ liveData.emit("new-data",req.body.message) // Emitting event.
+})
+// Listening on Host and Port
+http.listen(port, host, () => console.log(`Listening on http://${process.env.HOST}:${process.env.PORT}/`))

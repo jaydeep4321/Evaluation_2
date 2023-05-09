@@ -66,14 +66,14 @@ exports.updateQuestion = async (req, res, next) => {
 
 exports.deleteQuestion = async (req, res, next) => {
   try {
-    const question = await Question.findById(req.params.id);
+    const question = await Question.findByIdAndUpdate(req.params.id, {
+      $set: { active: false },
+    });
     if (!question) {
       return res
         .status(404)
         .json({ error: true, message: "Question not found" });
     }
-
-    await question.remove();
 
     res
       .status(200)
