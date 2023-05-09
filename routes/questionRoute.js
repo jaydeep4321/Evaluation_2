@@ -3,6 +3,11 @@ const questionController = require("../controller/questionController");
 
 const router = express.Router();
 
-router.route("/").post(questionController.createQuestion);
+router
+  .route("/:id")
+  .post(questionController.createQuestion)
+  .get(questionController.getQuestion)
+  .patch(questionController.updateQuestion)
+  .delete(questionController.deleteQuestion);
 
 module.exports = router;
