@@ -9,6 +9,8 @@ dotenv.config({ path: "./config.env" });
 const Quiz = require("./models/quizModel");
 const User = require("./models/userModel");
 const Question = require("./models/questionModel");
+const authController = require("./controller/authController");
+const { log } = require("console");
 
 const app = express();
 
@@ -27,17 +29,22 @@ global.io = io;
 app.use(
   session({
     secret: "your-secret-key-here",
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
   })
 );
 
 app.use(express.json({ limit: "10kb" }));
 
+//socket.io middleware for  authentication
+// const wrap = (middleware) => (socket, next) =>
+//   middleware(socket.request, {}, next);
+
+// const sharedsession = require("express-socket.io-session");
+// io.use(sharedsession(session));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-
 
 //============================= socket.io practice ===========================//
 // io.on("connection", (socket) => {
@@ -74,25 +81,30 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // });
 
 //======================= First Success full attempt  for fetching quiz=====================//
-io.on("connection", async (req, res, next) => {
-  console.log("A user connected");
+// io.on("connection", async (socket) => {
+//   console.log("A user connected");
 
-  const quiz = await Quiz.find();
+//   const quiz = await Quiz.find();
 
-  io.emit("recieveData", quiz);
-  // Send a message when
-  // setTimeout(function () {
-  //   // Sending an object when emmiting an event
-  //   socket.emit("testerEvent", {
-  //     description: "A custom event named testerEvent!",
-  //   });
-  // }, 4000);
+//   socket.emit("recieveData", quiz);
+//   socket.on("giveResponse", function (response) {
+//     if (respn) socket.off("giveResponse");
+//   });
 
-  // socket.emit("getData", function (data) {});
-  // socket.on("disconnect", function () {
-  //   console.log("A user disconnected");
-  // });
-});
+//   // =====================//
+//   // Send a message when
+//   // setTimeout(function () {
+//   //   // Sending an object when emmiting an event
+//   //   socket.emit("testerEvent", {
+//   //     description: "A custom event named testerEvent!",
+//   //   });
+//   // }, 4000);
+
+//   // socket.emit("getData", function (data) {});
+//   // socket.on("disconnect", function () {
+//   //   console.log("A user disconnected");
+//   // });
+// });
 
 //======================= emit question (failed)=================//
 // io.of("/:id").on("connection", async (req, res, next) => {
@@ -103,12 +115,12 @@ io.on("connection", async (req, res, next) => {
 // });
 
 //======================= emit all question (successfull)==============//
-io.on("connection", async (req, res, next) => {
-  console.log("user connected");
-  const questions = await Question.find();
+// io.on("connection", async (req, res, next) => {
+//   console.log("user connected");
+//   const questions = await Question.find();
 
-  io.emit("recievedQuestion", questions);
-});
+//   io.emit("recievedQuestion", questions);
+// });
 
 //========================= emit quiz and show question on interval ================ //
 // io.on("connection", async (req, res, next) => {
@@ -148,9 +160,24 @@ io.on("connection", async (req, res, next) => {
 //   });
 // });
 
+// ========================== only allow authentication middleware ===============//
+// io.use((socket, next) => {
+//   const session = socket.request.session;
+//   if (session && session.authenticated) {
+//     next();
+//   } else {
+//     next(new Error("unauthorized"));
+//   }
+// });
+
 //================================emit quiz and show question with timer  ========================//
-io.on("connection", async (socket) => {
-  console.log("with timer");
+io.on("connection", async (socket, req, res, next) => {
+  // if (!req.session) {
+  //   return res.status(401).json({ error: true, message: "Unauthorized" });
+  // }
+  // next();
+  // console.log(socket);
+  // console.log("with timer");
   const quizzes = await Quiz.find();
   let timeLeft = 30;
 
@@ -171,13 +198,31 @@ io.on("connection", async (socket) => {
         setTimeout(async () => {
           const question = await Question.findOne({ _id: questionIds[i] });
 
-          io.on("getAns", function (ans) {
-            //ans comparision code here
-          });
+          // io.on("getAns", function (ans) {
+          //   //=======ans comparision code here======//
+          //   // const isCorrect = true
+          //   // if(ans === question.option.isCorrect)
+          // });
 
-          console.log(question);
-
+          // console.log(question);
           socket.emit("gettingQuestion", question);
+
+          socket.on("getAns", async (ans, next) => {
+            console.log("===> logging query", req.query);
+            if (ans === question.options.optionText) {
+              console.log("process is on");
+              const user = await User.findByIdAndUpdate(
+                { _id: req.query.id },
+                { $set: { totalScore: totlaScore + score } }
+              );
+
+              if (!user) {
+                return next(new Error("user not found!"), 404);
+              }
+            } else {
+              console.log("you have choosed wrong option");
+            }
+          });
         }, delay);
         delay += 30000;
       }
@@ -192,6 +237,7 @@ server.listen(process.env.PORT, process.env.HOST, () =>
 app.use("/api/v1/users", userRoute);
 app.use("/api/v1/quiz", quizRoute);
 app.use("/api/v1/questions", questionRoute);
+
 // app.use("/api/v1/answers", answerRoute);
 
 module.exports = app;

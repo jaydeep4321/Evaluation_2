@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    totalScore: { type: Number },
+    totalScore: { type: Number, default: 0 },
   },
   {
     timestamps: { createdAt: true, updatedAt: true },
