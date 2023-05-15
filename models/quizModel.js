@@ -6,7 +6,9 @@ const quizSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    description: String,
+    description: {
+      type: String,
+    },
     duration: {
       type: Number,
       default: 0,
@@ -33,6 +35,12 @@ const quizSchema = new mongoose.Schema(
     },
   }
 );
+
+quizSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+
+  next();
+});
 
 const Quiz = mongoose.model("Quiz", quizSchema);
 

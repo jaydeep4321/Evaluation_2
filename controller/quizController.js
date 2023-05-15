@@ -1,91 +1,92 @@
-const { Socket } = require("socket.io");
 const Quiz = require("../models/quizModel");
+const catchAsync = require("../utils/catchAsync");
+const AppError = require("../utils/appError");
 
-exports.createQuiz = async (req, res, next) => {
-  try {
-    const quiz = new Quiz({
+//=================CREATE QUIZ===============//
+exports.createQuiz = catchAsync(async (req, res, next) => {
+  const quiz = new Quiz({
+    title: req.body.title,
+    description: req.body.description,
+    duration: req.body.duration,
+    questions: req.body.questions,
+  });
+
+  await quiz.save();
+
+  res
+    .status(201)
+    .json({ error: false, message: "Quiz has been created!", data: quiz });
+});
+
+//=================GET ALL QUIZ==============//
+exports.getAllQuizzes = catchAsync(async (req, res, next) => {
+  const quizzes = await Quiz.find().populate("questions");
+
+  res
+    .status(200)
+    .json({ error: false, message: "Quizzes found!", data: quizzes });
+});
+
+//=================GET QUIZ BY ID============//
+exports.getQuiz = catchAsync(async (req, res, next) => {
+  const quiz = await Quiz.findById(req.params.id).populate("questions");
+
+  if (!quiz) {
+    return next(new AppError("Quiz not found", 404));
+  }
+
+  res.status(200).json({ error: false, data: quiz });
+});
+
+//==================UPDATE==================//
+exports.updateQuiz = catchAsync(async (req, res, next) => {
+  const quiz = await Quiz.findByIdAndUpdate(
+    req.params.id,
+    {
       title: req.body.title,
       description: req.body.description,
       duration: req.body.duration,
       questions: req.body.questions,
-    });
+    },
+    { new: true }
+  );
 
-    await quiz.save();
-
-    res
-      .status(201)
-      .json({ error: false, message: "Quiz has been created!", data: quiz });
-  } catch (error) {
-    res.status(400).json({ error: true, message: error.message });
+  if (!quiz) {
+    return next(new AppError("Quiz not found", 404));
   }
-};
 
-exports.getAllQuizzes = async (req, res, next) => {
-  try {
-    const quizzes = await Quiz.find();
+  res.status(200).json({ error: false, data: quiz });
+});
 
-    // const socket = req.app.get("socket");
-    // socket.emit("quiz", quizzes);
-    // global.io.emit("news", { hello: "world" });
-    res
-      .status(200)
-      .json({ error: false, message: "Quizzes found!", data: quizzes });
-  } catch (error) {
-    res.status(400).json({ error: true, message: error.message });
+//==================DELETE==================//
+exports.deleteQuiz = catchAsync(async (req, res, next) => {
+  const quiz = await Quiz.findByIdAndUpdate(req.params.id, {
+    $set: { active: false },
+  });
+
+  if (!quiz) {
+    return next(new AppError("Quiz not found", 404));
   }
-};
 
-exports.getQuiz = async (req, res, next) => {
-  try {
-    const quiz = await Quiz.findById(req.params.id);
+  res.status(200).json({ error: false, message: "Quiz deleted successfully" });
+});
 
-    if (!quiz) {
-      return res.status(404).json({ error: true, message: "Quiz not found" });
-    }
+//============JUST FOR REFRENCE===========//
+// exports.createQuiz = async (req, res, next) => {
+//   try {
+//     const quiz = new Quiz({
+//       title: req.body.title,
+//       description: req.body.description,
+//       duration: req.body.duration,
+//       questions: req.body.questions,
+//     });
 
-    res.status(200).json({ error: false, data: quiz });
-  } catch (error) {
-    res.status(400).json({ error: true, message: error.message });
-  }
-};
+//     await quiz.save();
 
-exports.updateQuiz = async (req, res, next) => {
-  try {
-    const quiz = await Quiz.findByIdAndUpdate(
-      req.params.id,
-      {
-        title: req.body.title,
-        description: req.body.description,
-        duration: req.body.duration,
-        questions: req.body.questions,
-      },
-      { new: true }
-    );
-
-    if (!quiz) {
-      return res.status(404).json({ error: true, message: "Quiz not found" });
-    }
-
-    res.status(200).json({ error: false, data: quiz });
-  } catch (error) {
-    res.status(400).json({ error: true, message: error.message });
-  }
-};
-
-exports.deleteQuiz = async (req, res, next) => {
-  try {
-    const quiz = await Quiz.findByIdAndUpdate(req.params.id, {
-      $set: { active: false },
-    });
-
-    if (!quiz) {
-      return res.status(404).json({ error: true, message: "Quiz not found" });
-    }
-
-    res
-      .status(200)
-      .json({ error: false, message: "Quiz deleted successfully" });
-  } catch (error) {
-    res.status(400).json({ error: true, message: error.message });
-  }
-};
+//     res
+//       .status(201)
+//       .json({ error: false, message: "Quiz has been created!", data: quiz });
+//   } catch (error) {
+//     res.status(400).json({ error: true, message: error.message });
+//   }
+// };

@@ -38,6 +38,12 @@ const questionSchema = new mongoose.Schema(
   }
 );
 
+questionSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+
+  next();
+});
+
 const Question = mongoose.model("Question", questionSchema);
 
 module.exports = Question;

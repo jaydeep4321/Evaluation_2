@@ -3,22 +3,45 @@ const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, require: true },
-    email: { type: String, require: true, unique: true },
-    password: { type: String, require: true },
-    deletedAt: { type: Date },
-    active: { type: Boolean, default: true },
-    secret: { type: String },
-    authIsSet: {
-      type: Boolean,
-      default: false,
+    name: {
+      type: String,
+      require: true,
     },
-    totalScore: { type: Number, default: 0 },
+    email: {
+      type: String,
+      unique: true,
+      require: true,
+    },
+    password: {
+      type: String,
+      require: true,
+    },
+    deletedAt: {
+      type: Date,
+    },
+    active: {
+      type: Boolean,
+      default: true,
+    },
+    secret: {
+      type: String,
+    },
+    totalScore: {
+      type: Number,
+      default: 0,
+    },
   },
   {
-    timestamps: { createdAt: true, updatedAt: true },
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    timestamps: {
+      createdAt: true,
+      updatedAt: true,
+    },
+    toJSON: {
+      virtuals: true,
+    },
+    toObject: {
+      virtuals: true,
+    },
   }
 );
 
@@ -27,6 +50,12 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, 12);
 
   this.passwordConfirm = undefined;
+});
+
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+
+  next();
 });
 
 const User = mongoose.model("User", userSchema);

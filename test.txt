@@ -17,3 +17,8 @@ app.post('/',(req, res) => {
 })
 // Listening on Host and Port
 http.listen(port, host, () => console.log(`Listening on http://${process.env.HOST}:${process.env.PORT}/`))
+
+
+,
+    "dev": "nodemon server.js",
+    "start:prod": "NODE_ENV=production nodemon server.js"
