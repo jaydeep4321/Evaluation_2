@@ -33,3 +33,12 @@ exports.getAllUser = async (req, res, next) => {
     res.status(400).json({ error: true, message: error.message });
   }
 };
+
+exports.getLeaderBoard = async (req, res) => {
+  const users = await User.find().sort({ totalScore: -1 });
+  
+  if (!users) {
+    return next(new Error("There is no user!", 404));
+  }
+  res.status(400).json({ error: false, message: "success", data: users });
+};

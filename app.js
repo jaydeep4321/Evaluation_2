@@ -170,15 +170,32 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //   }
 // });
 
+
+//================== authentication ====================//
+io.use((socket, next) => {
+  const cookie = socket.request.headers.cookie;
+  if (cookie) {
+    const sessionId = cookie.split('=')[1];
+    socket.server.sessionStore.get(sessionId, (err, session) => {
+      if (err || !session) {
+        return next(new Error('Authentication error'));
+      } else {
+        socket.session = session;
+        return next();
+      }
+    });
+  } else {
+    return next(new Error('Authentication error no cookie'));
+  }
+});
+
+
 //================================emit quiz and show question with timer  ========================//
-io.on("connection", async (socket, req, res, next) => {
-  // if (!req.session) {
-  //   return res.status(401).json({ error: true, message: "Unauthorized" });
-  // }
-  // next();
-  // console.log(socket);
-  // console.log("with timer");
+
+io.on("connection", async (socket) => {
   const quizzes = await Quiz.find();
+  let quizIndex = 0;
+  let questionIndex = 0;
   let timeLeft = 30;
 
   const timer = setInterval(() => {
@@ -186,49 +203,71 @@ io.on("connection", async (socket, req, res, next) => {
     timeLeft--;
     if (timeLeft < 0) {
       clearInterval(timer);
+      socket.emit("quizOver");
     }
   }, 1000);
 
-  let delay = 0;
-  quizzes.forEach(async (quiz) => {
+  const askQuestion = async (quizIndex, questionIndex) => {
+    const quiz = quizzes[quizIndex];
     const questionIds = quiz.questions.map((q) => q._id);
+    const question = await Question.findOne({
+      _id: questionIds[questionIndex],
+    });
+    socket.emit("gettingQuestion", question);
+    
+    socket.once("getAns", async (ans) => {
+      // const question = quiz.questions[questionIndex];
+      // console.log(question)
 
-    if (questionIds.length > 0) {
-      for (let i = 0; i < questionIds.length; i++) {
-        setTimeout(async () => {
-          const question = await Question.findOne({ _id: questionIds[i] });
+      const question = await Question.findOne({_id: questionIds[questionIndex]});
+      // console.log(question)
 
-          // io.on("getAns", function (ans) {
-          //   //=======ans comparision code here======//
-          //   // const isCorrect = true
-          //   // if(ans === question.option.isCorrect)
-          // });
-
-          // console.log(question);
-          socket.emit("gettingQuestion", question);
-
-          socket.on("getAns", async (ans, next) => {
-            console.log("===> logging query", req.query);
-            if (ans === question.options.optionText) {
-              console.log("process is on");
-              const user = await User.findByIdAndUpdate(
-                { _id: req.query.id },
-                { $set: { totalScore: totlaScore + score } }
-              );
-
-              if (!user) {
-                return next(new Error("user not found!"), 404);
-              }
-            } else {
-              console.log("you have choosed wrong option");
-            }
-          });
-        }, delay);
-        delay += 30000;
+      const options = question.options;
+      // console.log(options);
+      if (!options) {
+        return socket.emit("error", "Options not found!");
       }
-    }
-  });
+      const correctOption = options.find((option) => option.isCorrect);
+      const isCorrect = correctOption.optionText === ans;
+      const score = isCorrect ? question.score : 0;
+  
+      const user = await User.findByIdAndUpdate(
+        socket.handshake.query.id,
+        // console.log(socket.handshake.query.id),
+        {
+          $inc: {
+            totalScore: score,
+          },
+        },
+        { new: true }
+      );
+  
+      console.log(user)
+      if (!user) {
+        return socket.emit("error", "User not found!");
+      }
+  
+      const nextQuestionIndex = questionIndex + 1;
+      if (nextQuestionIndex < questionIds.length) {
+        setTimeout(() => {
+          askQuestion(quizIndex, nextQuestionIndex);
+        }, 30000);
+      } else {
+        const nextQuizIndex = quizIndex + 1;
+        if (nextQuizIndex < quizzes.length) {
+          setTimeout(() => {
+            askQuestion(nextQuizIndex, 0);
+          }, 30000);
+        } else {
+          socket.emit("quizOver", "quiz over");
+        }
+      }
+    });
+  };
+  
+  askQuestion(0, 0);
 });
+
 
 server.listen(process.env.PORT, process.env.HOST, () =>
   console.log(`Listening on http://${process.env.HOST}:${process.env.PORT}/`)

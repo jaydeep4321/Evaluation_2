@@ -2,6 +2,12 @@ const speakeasy = require("speakeasy");
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const qrcode = require("qrcode");
+const cookieParser = require('cookie-parser');
+const express = require("express")
+const app = express()
+
+app.use(cookieParser())
+
 
 exports.signup = async (req, res, next) => {
   const secretToken = speakeasy.generateSecret();
@@ -90,6 +96,7 @@ exports.login = async (req, res, next) => {
 
     // Set session data to indicate that the user is authenticated
     req.session.userId = user._id;
+    res.cookie('session_id', req.session.userId);
 
     return res.status(200).json({
       status: "success",
