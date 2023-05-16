@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
+const glob = require("../utils/responseHandler");
 
 //====================GET ALL USER=================//
 exports.getAllUser = catchAsync(async (req, res, next) => {
@@ -23,7 +24,6 @@ exports.getLeaderBoard = catchAsync(async (req, res, next) => {
 
   glob.send(res, 200, "Success", users);
 });
-
 
 //================JUST FOR REFRENCE =================//
 // exports.signup = async (req, res, next) => {

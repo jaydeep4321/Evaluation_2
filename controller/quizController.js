@@ -1,6 +1,7 @@
 const Quiz = require("../models/quizModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
+const glob = require("../utils/responseHandler");
 
 //=================CREATE QUIZ===============//
 exports.createQuiz = catchAsync(async (req, res, next) => {
@@ -66,7 +67,6 @@ exports.deleteQuiz = catchAsync(async (req, res, next) => {
 
   glob.send(res, 200, "Quiz deleted successfully");
 });
-
 
 //============JUST FOR REFRENCE===========//
 // exports.createQuiz = async (req, res, next) => {

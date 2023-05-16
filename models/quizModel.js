@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const constant = require("../utils/constants");
 
 const quizSchema = new mongoose.Schema(
   {
@@ -16,12 +17,12 @@ const quizSchema = new mongoose.Schema(
     questions: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Question",
+        ref: constant.QUESTION_MODEL,
       },
     ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: constant.USER_MODEL,
     },
     active: {
       type: Boolean,
@@ -33,6 +34,12 @@ const quizSchema = new mongoose.Schema(
       createdAt: true,
       updatedAt: true,
     },
+    toJSON: {
+      virtuals: true,
+    },
+    toObject: {
+      virtuals: true,
+    },
   }
 );
 
@@ -42,6 +49,6 @@ quizSchema.pre(/^find/, function (next) {
   next();
 });
 
-const Quiz = mongoose.model("Quiz", quizSchema);
+const Quiz = mongoose.model(constant.QUIZ_MODEL, quizSchema);
 
 module.exports = Quiz;

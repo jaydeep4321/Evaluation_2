@@ -3,12 +3,28 @@ const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const qrcode = require("qrcode");
 const catchAsync = require("../utils/catchAsync");
-const glob = require("../utils/responseHandler")
-const AppError = require("../utils/appError")
+const glob = require("../utils/responseHandler");
+const AppError = require("../utils/appError");
 // const cookieParser = require("cookie-parser");
 // app.use(cookieParser());
 
 //=====================SIGN UP=========================//
+// exports.signup = catchAsync(async (req, res, next) => {
+//   const secretToken = speakeasy.generateSecret();
+
+//   const user = new User({
+//     name: req.body.name,
+//     email: req.body.email,
+//     password: req.body.password,
+//     secret: secretToken.base32,
+//   });
+
+//   await user.save();
+//   glob.send(res, 200, "success", secretToken.base32);
+// });
+
+//==================SIGN UP WITH QR==================//
+
 exports.signup = catchAsync(async (req, res, next) => {
   const secretToken = speakeasy.generateSecret();
 
@@ -16,49 +32,27 @@ exports.signup = catchAsync(async (req, res, next) => {
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
+    role: req.body.role,
     secret: secretToken.base32,
   });
 
   await user.save();
-  glob.send(res, 200, "success", secretToken.base32);
-  next();
+
+  // Generate QR code for user
+  qrcode.toDataURL(secretToken.otpauth_url, (err, imageUrl) => {
+    if (err) {
+      console.log(err);
+      return next(new AppError("Error generating QR code", 500));
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "success",
+      // token: secretToken.base32,
+      qrCodeUrl: imageUrl,
+    });
+  });
 });
-
-//==================SIGN UP WITH QR==================//
-
-// exports.signup = async (req, res, next) => {
-//   const secretToken = speakeasy.generateSecret();
-//   try {
-//     const user = new User({
-//       name: req.body.name,
-//       email: req.body.email,
-//       password: req.body.password,
-//       secret: secretToken.base32,
-//     });
-
-//     await user.save();
-
-//     // Generate QR code for user
-//     qrcode.toDataURL(secretToken.otpauth_url, (err, imageUrl) => {
-//       if (err) {
-//         console.log(err);
-//         return res
-//           .status(500)
-//           .json({ error: true, message: "Error generating QR code" });
-//       }
-
-//       res.status(200).json({
-//         error: false,
-//         message: "success",
-//         token: secretToken.base32,
-//         qrCodeImageUrl: imageUrl,
-//       });
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(400).json({ error: true, message: error.message });
-//   }
-// };
 
 //=====================LOGIN=====================//
 exports.login = catchAsync(async (req, res, next) => {
@@ -77,11 +71,11 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // Verify TOTP token
   const secret = user.secret;
-  const token = req.body.token;
+  const otp = req.body.otp;
   const verified = speakeasy.totp.verify({
     secret: secret,
     encoding: "base32",
-    token: token,
+    token: otp,
   });
 
   if (!verified) {
@@ -91,10 +85,10 @@ exports.login = catchAsync(async (req, res, next) => {
   // Set session data to indicate that the user is authenticated
   req.session.userId = user._id;
   // res.cookie('session_id', req.session.userId);
-
+  user.password = undefined;
+  user.secret = undefined;
   return glob.send(res, 200, "Verification successful", user);
 });
-
 
 // exports.login = catchAsync(async (req, res, next) => {
 //   const { email, password } = req.body;
@@ -145,6 +139,22 @@ exports.protected = (req, res, next) => {
   next();
 };
 
+//===================USER RESTRICTION====================//
+exports.restrictTo = (...roles) => {
+  console.log("==>", ...roles);
+  return catchAsync(async (req, res, next) => {
+    const user = await User.findOne({ _id: req.session.userId });
+    console.log("==>", user);
+
+    if (!roles.includes(user.role)) {
+      return next(
+        new AppError("You do not have a permission to perform this task.", 403)
+      );
+    }
+    next();
+  });
+};
+
 //=======================LOGOUT=======================//
 
 exports.logout = catchAsync(async (req, res, next) => {
@@ -155,7 +165,6 @@ exports.logout = catchAsync(async (req, res, next) => {
     return glob.send(res, 200, "Logout successful");
   });
 });
-
 
 // exports.logout = catchAsync(async (req, res, next) => {
 //   // Destroy the session to log the user out

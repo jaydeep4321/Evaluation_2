@@ -1,20 +1,25 @@
 const mongoose = require("mongoose");
-const constant = require("../utils/constant");
+const constant = require("../utils/constants");
+const validator = require("validator");
 
 const questionSchema = new mongoose.Schema(
   {
-    text: {
+    title: {
       type: String,
       required: true,
     },
     type: {
       type: String,
-      enum: [constant.QUESTION_TYPE_MCQ, constant.QUESTION_TYPE_TRUEFALSE],
+      enum: {
+        values: [constant.QUESTION_TYPE_MCQ, constant.QUESTION_TYPE_TRUEFALSE],
+        message: "{VALUE} is not supported",
+      },
+
       required: true,
     },
     options: [
       {
-        optionText: String,
+        optionTitle: String,
         isCorrect: Boolean,
       },
     ],
@@ -23,7 +28,7 @@ const questionSchema = new mongoose.Schema(
     },
     quiz: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Quiz",
+      ref: constant.QUIZ_MODEL,
     },
     active: {
       type: Boolean,
@@ -35,6 +40,12 @@ const questionSchema = new mongoose.Schema(
       createdAt: true,
       updatedAt: true,
     },
+    toJSON: {
+      virtuals: true,
+    },
+    toObject: {
+      virtuals: true,
+    },
   }
 );
 
@@ -44,6 +55,6 @@ questionSchema.pre(/^find/, function (next) {
   next();
 });
 
-const Question = mongoose.model("Question", questionSchema);
+const Question = mongoose.model(constant.QUESTION_MODEL, questionSchema);
 
 module.exports = Question;

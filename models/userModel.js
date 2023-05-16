@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const constants = require("../utils/constants");
 
 const userSchema = new mongoose.Schema(
   {
@@ -19,16 +20,28 @@ const userSchema = new mongoose.Schema(
     deletedAt: {
       type: Date,
     },
-    active: {
-      type: Boolean,
-      default: true,
-    },
     secret: {
       type: String,
     },
     totalScore: {
       type: Number,
       default: 0,
+    },
+    role: {
+      type: String,
+      enum: {
+        values: [
+          constants.USER_ROLE_ADMIN,
+          constants.USER_ROLE_USER,
+          constants.USER_ROLE_SUPERADMIN,
+        ],
+        message: "{VALUE} is not supported",
+      },
+      default: constants.USER_ROLE_USER,
+    },
+    active: {
+      type: Boolean,
+      default: true,
     },
   },
   {
@@ -48,8 +61,6 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12);
-
-  this.passwordConfirm = undefined;
 });
 
 userSchema.pre(/^find/, function (next) {
@@ -58,6 +69,6 @@ userSchema.pre(/^find/, function (next) {
   next();
 });
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model(constants.USER_MODEL, userSchema);
 
 module.exports = User;
