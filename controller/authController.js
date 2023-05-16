@@ -3,11 +3,12 @@ const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const qrcode = require("qrcode");
 const catchAsync = require("../utils/catchAsync");
+const glob = require("../utils/responseHandler")
+const AppError = require("../utils/appError")
 // const cookieParser = require("cookie-parser");
-
 // app.use(cookieParser());
 
-//====================SIGN UP==================//
+//=====================SIGN UP=========================//
 exports.signup = catchAsync(async (req, res, next) => {
   const secretToken = speakeasy.generateSecret();
 
@@ -19,10 +20,8 @@ exports.signup = catchAsync(async (req, res, next) => {
   });
 
   await user.save();
-
-  res
-    .status(200)
-    .json({ error: false, message: "success", token: secretToken.base32 });
+  glob.send(res, 200, "success", secretToken.base32);
+  next();
 });
 
 //==================SIGN UP WITH QR==================//
@@ -67,13 +66,13 @@ exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    return next(new Error("Invalid email!", 400));
+    return next(new AppError("Invalid email!", 400));
   }
 
   // Verify password
   const passwordIsValid = await bcrypt.compare(password, user.password);
   if (!passwordIsValid) {
-    return next(new Error("Invalid password!", 400));
+    return next(new AppError("Invalid password!", 400));
   }
 
   // Verify TOTP token
@@ -86,22 +85,57 @@ exports.login = catchAsync(async (req, res, next) => {
   });
 
   if (!verified) {
-    return res.status(403).json({
-      error: true,
-      message: "verification failed",
-    });
+    return glob.send(res, 403, "Verification failed");
   }
 
   // Set session data to indicate that the user is authenticated
   req.session.userId = user._id;
   // res.cookie('session_id', req.session.userId);
 
-  return res.status(200).json({
-    status: "success",
-    message: "verification successful",
-    data: user,
-  });
+  return glob.send(res, 200, "Verification successful", user);
 });
+
+
+// exports.login = catchAsync(async (req, res, next) => {
+//   const { email, password } = req.body;
+//   const user = await User.findOne({ email });
+
+//   if (!user) {
+//     return next(new AppError("Invalid email!", 400));
+//   }
+
+//   // Verify password
+//   const passwordIsValid = await bcrypt.compare(password, user.password);
+//   if (!passwordIsValid) {
+//     return next(new AppError("Invalid password!", 400));
+//   }
+
+//   // Verify TOTP token
+//   const secret = user.secret;
+//   const token = req.body.token;
+//   const verified = speakeasy.totp.verify({
+//     secret: secret,
+//     encoding: "base32",
+//     token: token,
+//   });
+
+//   if (!verified) {
+//     return res.status(403).json({
+//       error: true,
+//       message: "verification failed",
+//     });
+//   }
+
+//   // Set session data to indicate that the user is authenticated
+//   req.session.userId = user._id;
+//   // res.cookie('session_id', req.session.userId);
+
+//   return res.status(200).json({
+//     status: "success",
+//     message: "verification successful",
+//     data: user,
+//   });
+// });
 
 //==================ROUTE PROTECTION===============//
 exports.protected = (req, res, next) => {
@@ -112,14 +146,25 @@ exports.protected = (req, res, next) => {
 };
 
 //=======================LOGOUT=======================//
+
 exports.logout = catchAsync(async (req, res, next) => {
   // Destroy the session to log the user out
   req.session.destroy((err) => {
     if (err) throw err;
 
-    return res.status(200).json({
-      status: "success",
-      message: "logout successful",
-    });
+    return glob.send(res, 200, "Logout successful");
   });
 });
+
+
+// exports.logout = catchAsync(async (req, res, next) => {
+//   // Destroy the session to log the user out
+//   req.session.destroy((err) => {
+//     if (err) throw err;
+
+//     return res.status(200).json({
+//       status: "success",
+//       message: "logout successful",
+//     });
+//   });
+// });

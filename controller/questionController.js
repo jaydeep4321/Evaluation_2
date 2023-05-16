@@ -18,11 +18,7 @@ exports.createQuestion = catchAsync(async (req, res, next) => {
   quiz.questions.push(question);
   await quiz.save();
 
-  res.status(201).json({
-    error: false,
-    message: "Question created successfully!",
-    data: question,
-  });
+  glob.send(res, 201, "Question created successfully!", question);
 });
 
 //================GET QUESTION BY ID============//
@@ -31,7 +27,7 @@ exports.getQuestion = catchAsync(async (req, res, next) => {
   if (!question) {
     return next(new AppError("Question not found!", 404));
   }
-  res.status(200).json({ error: false, data: question });
+  glob.send(res, 200, "Success", question);
 });
 
 //=================GET ALL QUESTION===============//
@@ -39,10 +35,10 @@ exports.getAllQuestions = catchAsync(async (req, res, next) => {
   const questions = await Question.find();
 
   if (!questions) {
-    return next(new AppError("no question available!!", 404));
+    return next(new AppError("No questions available!", 404));
   }
 
-  res.status(200).json({ error: false, data: questions });
+  glob.send(res, 200, "Success", questions);
 });
 
 //===================UPDATE=================//
@@ -57,11 +53,7 @@ exports.updateQuestion = catchAsync(async (req, res, next) => {
 
   await question.save();
 
-  res.status(200).json({
-    error: false,
-    message: "Question updated successfully",
-    data: question,
-  });
+  glob.send(res, 200, "Question updated successfully", question);
 });
 
 //===================DELETE================//
@@ -73,7 +65,5 @@ exports.deleteQuestion = catchAsync(async (req, res, next) => {
     return next(new AppError("Question not found!", 404));
   }
 
-  res
-    .status(200)
-    .json({ error: false, message: "Question deleted successfully" });
+  glob.send(res, 200, "Question deleted successfully");
 });

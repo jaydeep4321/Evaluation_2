@@ -13,18 +13,14 @@ exports.createQuiz = catchAsync(async (req, res, next) => {
 
   await quiz.save();
 
-  res
-    .status(201)
-    .json({ error: false, message: "Quiz has been created!", data: quiz });
+  glob.send(res, 201, "Quiz has been created!", quiz);
 });
 
 //=================GET ALL QUIZ==============//
 exports.getAllQuizzes = catchAsync(async (req, res, next) => {
   const quizzes = await Quiz.find().populate("questions");
 
-  res
-    .status(200)
-    .json({ error: false, message: "Quizzes found!", data: quizzes });
+  glob.send(res, 200, "Quizzes found!", quizzes);
 });
 
 //=================GET QUIZ BY ID============//
@@ -35,7 +31,7 @@ exports.getQuiz = catchAsync(async (req, res, next) => {
     return next(new AppError("Quiz not found", 404));
   }
 
-  res.status(200).json({ error: false, data: quiz });
+  glob.send(res, 200, "Success", quiz);
 });
 
 //==================UPDATE==================//
@@ -55,7 +51,7 @@ exports.updateQuiz = catchAsync(async (req, res, next) => {
     return next(new AppError("Quiz not found", 404));
   }
 
-  res.status(200).json({ error: false, data: quiz });
+  glob.send(res, 200, "Success", quiz);
 });
 
 //==================DELETE==================//
@@ -68,8 +64,9 @@ exports.deleteQuiz = catchAsync(async (req, res, next) => {
     return next(new AppError("Quiz not found", 404));
   }
 
-  res.status(200).json({ error: false, message: "Quiz deleted successfully" });
+  glob.send(res, 200, "Quiz deleted successfully");
 });
+
 
 //============JUST FOR REFRENCE===========//
 // exports.createQuiz = async (req, res, next) => {

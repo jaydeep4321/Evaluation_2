@@ -10,7 +10,7 @@ exports.getAllUser = catchAsync(async (req, res, next) => {
     return next(new AppError("There is no user!", 404));
   }
 
-  res.status(400).json({ error: false, message: "success", data: users });
+  glob.send(res, 200, "Success", users);
 });
 
 //====================LEADERBOARD============//
@@ -20,8 +20,10 @@ exports.getLeaderBoard = catchAsync(async (req, res, next) => {
   if (!users) {
     return next(new AppError("There is no user!", 404));
   }
-  res.status(400).json({ error: false, message: "success", data: users });
+
+  glob.send(res, 200, "Success", users);
 });
+
 
 //================JUST FOR REFRENCE =================//
 // exports.signup = async (req, res, next) => {

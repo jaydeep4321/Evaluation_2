@@ -172,23 +172,25 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //   }
 // });
 
+
 //================== authentication ====================//
-// io.use((socket, next) => {
-//   const cookie = socket.request.headers.cookie;
-//   if (cookie) {
-//     const sessionId = cookie.split('=')[1];
-//     socket.server.sessionStore.get(sessionId, (err, session) => {
-//       if (err || !session) {
-//         return next(new Error('Authentication error'));
-//       } else {
-//         socket.session = session;
-//         return next();
-//       }
-//     });
-//   } else {
-//     return next(new Error('Authentication error no cookie'));
-//   }
-// });
+io.use((socket, next) => {
+  const cookie = socket.request.headers.cookie;
+  if (cookie) {
+    const sessionId = cookie.split('=')[1];
+    socket.server.sessionStore.get(sessionId, (err, session) => {
+      if (err || !session) {
+        return next(new Error('Authentication error'));
+      } else {
+        socket.session = session;
+        return next();
+      }
+    });
+  } else {
+    return next(new Error('Authentication error, no cookie'));
+  }
+});
+
 
 //================================emit quiz and show question with timer  ========================//
 
@@ -214,14 +216,12 @@ io.on("connection", async (socket) => {
       _id: questionIds[questionIndex],
     });
     socket.emit("gettingQuestion", question);
-
+    
     socket.once("getAns", async (ans) => {
       // const question = quiz.questions[questionIndex];
       // console.log(question)
 
-      const question = await Question.findOne({
-        _id: questionIds[questionIndex],
-      });
+      const question = await Question.findOne({_id: questionIds[questionIndex]});
       // console.log(question)
 
       const options = question.options;
@@ -232,7 +232,7 @@ io.on("connection", async (socket) => {
       const correctOption = options.find((option) => option.isCorrect);
       const isCorrect = correctOption.optionText === ans;
       const score = isCorrect ? question.score : 0;
-
+  
       const user = await User.findByIdAndUpdate(
         socket.handshake.query.id,
         // console.log(socket.handshake.query.id),
@@ -243,12 +243,12 @@ io.on("connection", async (socket) => {
         },
         { new: true }
       );
-
-      console.log(user);
+  
+      console.log(user)
       if (!user) {
         return socket.emit("error", "User not found!");
       }
-
+  
       const nextQuestionIndex = questionIndex + 1;
       if (nextQuestionIndex < questionIds.length) {
         setTimeout(() => {
@@ -266,9 +266,10 @@ io.on("connection", async (socket) => {
       }
     });
   };
-
+  
   askQuestion(0, 0);
 });
+
 
 server.listen(process.env.PORT, process.env.HOST, () =>
   console.log(`Listening on http://${process.env.HOST}:${process.env.PORT}/`)
