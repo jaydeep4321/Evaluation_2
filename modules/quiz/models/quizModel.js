@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const constant = require("../utils/constants");
+const constant = require("../../../utils/constants");
 
 const quizSchema = new mongoose.Schema(
   {

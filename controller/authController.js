@@ -1,5 +1,5 @@
 const speakeasy = require("speakeasy");
-const User = require("../models/userModel");
+const User = require("../modules/user/models/userModel");
 const bcrypt = require("bcrypt");
 const qrcode = require("qrcode");
 const catchAsync = require("../utils/catchAsync");
@@ -69,25 +69,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError("Invalid password!", 400));
   }
 
-  // Verify TOTP token
-  const secret = user.secret;
-  const otp = req.body.otp;
-  const verified = speakeasy.totp.verify({
-    secret: secret,
-    encoding: "base32",
-    token: otp,
-  });
-
-  if (!verified) {
-    return glob.send(res, 403, "Verification failed");
-  }
-
-  // Set session data to indicate that the user is authenticated
-  req.session.userId = user._id;
-  // res.cookie('session_id', req.session.userId);
-  user.password = undefined;
-  user.secret = undefined;
-  return glob.send(res, 200, "Verification successful", user);
+  return glob.send(res, 200, "Cradential verified!", user);
 });
 
 // exports.login = catchAsync(async (req, res, next) => {
@@ -141,7 +123,7 @@ exports.protected = (req, res, next) => {
 
 //===================USER RESTRICTION====================//
 exports.restrictTo = (...roles) => {
-  console.log("==>", ...roles);
+  // console.log("==>", ...roles);
   return catchAsync(async (req, res, next) => {
     const user = await User.findOne({ _id: req.session.userId });
     console.log("==>", user);

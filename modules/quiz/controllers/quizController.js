@@ -1,7 +1,7 @@
 const Quiz = require("../models/quizModel");
-const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/appError");
-const glob = require("../utils/responseHandler");
+const catchAsync = require("../../../utils/catchAsync");
+const AppError = require("../../../utils/appError");
+const glob = require("../../../utils/responseHandler");
 
 //=================CREATE QUIZ===============//
 exports.createQuiz = catchAsync(async (req, res, next) => {

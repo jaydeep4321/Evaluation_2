@@ -1,6 +1,6 @@
 const express = require("express");
-const questionController = require("../controller/questionController");
-const validateQuestion = require("../validation/questionValidation/questionvalidator");
+const questionController = require("../controllers/questionController");
+const validateQuestion = require("../../../validation/questionValidation/questionvalidator");
 
 const router = express.Router();
 
