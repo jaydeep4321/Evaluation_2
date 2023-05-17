@@ -4,8 +4,12 @@ const speakeasy = require("speakeasy");
 const glob = require("../utils/responseHandler");
 
 exports.verifyOtp = catchAsync(async (req, res, next) => {
-  const email = req.body.email;
-  const user = await User.findOne({ email });
+  const user = req.session.user; // Retrieve the user object from the session
+
+  if (!user) {
+    return glob.send(res, 403, "Session expired");
+  }
+
   const secret = user.secret;
   const otp = req.body.otp;
   const verified = speakeasy.totp.verify({
@@ -18,10 +22,12 @@ exports.verifyOtp = catchAsync(async (req, res, next) => {
     return glob.send(res, 403, "Verification failed");
   }
 
-  // Set session data to indicate that the user is authenticated
+  req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
   req.session.userId = user._id;
 
+  // Clear sensitive user properties before sending the response
   user.password = undefined;
   user.secret = undefined;
+
   return glob.send(res, 200, "Verification successful", user);
 });

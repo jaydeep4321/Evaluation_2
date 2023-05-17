@@ -5,13 +5,11 @@ const userJoiSchema = Joi.object({
   name: Joi.string().required().max(50),
   email: Joi.string().email().required(),
 
-  role: Joi.object({
-    type: Joi.string().valid(
-      constants.USER_ROLE_USER,
-      constants.USER_ROLE_ADMIN,
-      constants.USER_ROLE_SUPERADMIN
-    ),
-  }),
+  role: Joi.string().valid(
+    constants.USER_ROLE_USER,
+    constants.USER_ROLE_ADMIN,
+    constants.USER_ROLE_SUPERADMIN
+  ),
   password: Joi.string().min(8).max(12).required(),
 });
 

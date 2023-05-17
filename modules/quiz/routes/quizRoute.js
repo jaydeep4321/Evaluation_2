@@ -6,21 +6,24 @@ const authController = require("../../../controller/authController");
 
 const router = express.Router();
 
-router
-  .route("/")
-  .post(validateQuiz, quizController.createQuiz)
-  .get(quizController.getAllQuizzes);
+//===============PROTECTED ROUTES FROM HERE================//
 
-router.route("/data").get(quizController.getAllQuizzes);
+router.use(authController.protected);
+
+router.route("/").get(quizController.getAllQuizzes);
+
+router.route("/:id").get(quizController.getQuiz);
+
+
+//================RESTRICTED ROUTES FROM HERE==============//
+
+router.use(authController.restrictTo("admin", "superAdmin"));
+
+router.route("/").post(validateQuiz, quizController.createQuiz);
 
 router
   .route("/:id")
-  .get(quizController.getQuiz)
   .patch(validateUpdateQuiz, quizController.updateQuiz)
-  .delete(
-    authController.protected,
-    authController.restrictTo("admin"),
-    quizController.deleteQuiz
-  );
+  .delete(quizController.deleteQuiz);
 
 module.exports = router;

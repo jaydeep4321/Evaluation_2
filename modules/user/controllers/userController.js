@@ -26,23 +26,3 @@ exports.getLeaderBoard = catchAsync(async (req, res, next) => {
 
   glob.send(res, 200, "Success", users);
 });
-
-//================JUST FOR REFRENCE =================//
-// exports.signup = async (req, res, next) => {
-//   try {
-//     const user = new User({
-//       name: req.body.name,
-//       email: req.body.email,
-//       password: req.body.password,
-//     });
-
-//     await user.save();
-
-//     res
-//       .status(201)
-//       .json({ error: false, message: "created succefully", data: user });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(400).json({ error: true, message: error.message });
-//   }
-// };

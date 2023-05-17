@@ -67,23 +67,3 @@ exports.deleteQuiz = catchAsync(async (req, res, next) => {
 
   glob.send(res, 200, "Quiz deleted successfully");
 });
-
-//============JUST FOR REFRENCE===========//
-// exports.createQuiz = async (req, res, next) => {
-//   try {
-//     const quiz = new Quiz({
-//       title: req.body.title,
-//       description: req.body.description,
-//       duration: req.body.duration,
-//       questions: req.body.questions,
-//     });
-
-//     await quiz.save();
-
-//     res
-//       .status(201)
-//       .json({ error: false, message: "Quiz has been created!", data: quiz });
-//   } catch (error) {
-//     res.status(400).json({ error: true, message: error.message });
-//   }
-// };

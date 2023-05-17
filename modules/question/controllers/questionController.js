@@ -67,11 +67,6 @@ exports.updateQuestion = catchAsync(async (req, res, next) => {
     return next(new AppError("Question not found!", 404));
   }
 
-  question.questionText = req.body.questionText || question.questionText;
-  question.options = req.body.options || question.options;
-
-  await question.save();
-
   glob.send(res, 200, "Question updated successfully", question);
 });
 

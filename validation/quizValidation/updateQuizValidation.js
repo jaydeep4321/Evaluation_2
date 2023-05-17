@@ -1,7 +1,7 @@
 const Joi = require("joi");
 
 const quizJoiSchema = Joi.object({
-  title: Joi.string().required().max(50),
+  title: Joi.string().max(50),
   description: Joi.string(),
   duration: Joi.number(),
 });
