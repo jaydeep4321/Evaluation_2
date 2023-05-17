@@ -34,7 +34,10 @@ exports.createQuestion = catchAsync(async (req, res, next) => {
 
 //================GET QUESTION BY ID============//
 exports.getQuestion = catchAsync(async (req, res, next) => {
-  const question = await Question.findById(req.params.id);
+  const question = await Question.findById(req.params.id).populate({
+    path: "quiz",
+    select: "title",
+  });
   if (!question) {
     return next(new AppError("Question not found!", 404));
   }
@@ -43,7 +46,10 @@ exports.getQuestion = catchAsync(async (req, res, next) => {
 
 //=================GET ALL QUESTION===============//
 exports.getAllQuestions = catchAsync(async (req, res, next) => {
-  const questions = await Question.find();
+  const questions = await Question.find().populate({
+    path: "quiz",
+    select: "title",
+  });
 
   if (!questions) {
     return next(new AppError("No questions available!", 404));
@@ -76,11 +82,51 @@ exports.updateQuestion = catchAsync(async (req, res, next) => {
 //===================DELETE================//
 exports.deleteQuestion = catchAsync(async (req, res, next) => {
   const question = await Question.findByIdAndUpdate(req.params.id, {
-    $set: { active: false },
+    active: false,
+    deletedAt: Date.now(),
   });
+
+  console.log("==>", question.quiz);
+  let quiz = await Quiz.findById(question.quiz);
+  console.log("==> question_id", question._id);
+  // quiz.questions.pop(question._id);
+  // console.log("==> quiz_questions", quiz.questions);
+  quiz.questions = quiz.questions.remove(question._id);
+  console.log(quiz.questions);
+
+  quiz = await Quiz.findByIdAndUpdate(question.quiz, {
+    $set: { questions: quiz.questions },
+  });
+  console.log("==>", quiz);
   if (!question) {
     return next(new AppError("Question not found!", 404));
   }
 
   glob.send(res, 200, "Question deleted successfully");
+});
+
+exports.addQuestionById = catchAsync(async (req, res, next) => {
+  let question = await Question.findById(req.params.id);
+
+  if (!question) {
+    return next(new AppError("Question not found", 404));
+  }
+
+  let quiz = await Quiz.findById(req.body.quiz);
+
+  if (!quiz) {
+    return next(new AppError("Quiz not found", 404));
+  }
+
+  quiz.questions = quiz.questions.push(question._id);
+
+  quiz = await Quiz.findByIdAndUpdate(req.body.quiz, {
+    $set: { questions: quiz.questions },
+  });
+
+  question = await Question.findByIdAndUpdate(req.params.id, {
+    $set: { quiz: req.body.quiz },
+  });
+
+  return glob.send(res, 200, "Added successfully!", question);
 });

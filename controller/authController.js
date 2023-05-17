@@ -38,7 +38,6 @@ exports.restrictTo = (...roles) => {
   // console.log("==>", ...roles);
   return catchAsync(async (req, res, next) => {
     const user = await User.findOne({ _id: req.session.userId });
-    console.log("==>", user);
 
     if (!roles.includes(user.role)) {
       console.log(roles);
@@ -48,7 +47,6 @@ exports.restrictTo = (...roles) => {
       );
     }
 
-    console.log("==>", "I am here");
     next();
   });
 };

@@ -6,9 +6,6 @@ const glob = require("../utils/responseHandler");
 exports.verifyOtp = catchAsync(async (req, res, next) => {
   const user = req.session.user;
 
-  // const user = await User.findById(req.session.userId);
-  console.log(user);
-
   if (!user) {
     return glob.send(res, 403, "Session expired");
   }

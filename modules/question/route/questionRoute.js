@@ -22,4 +22,6 @@ router
   .patch(questionController.updateQuestion)
   .delete(questionController.deleteQuestion);
 
+router.route("/:id/addToQuiz").patch(questionController.addQuestionById);
+
 module.exports = router;

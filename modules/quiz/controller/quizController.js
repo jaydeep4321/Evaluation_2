@@ -66,7 +66,8 @@ exports.updateQuiz = catchAsync(async (req, res, next) => {
 //==================DELETE==================//
 exports.deleteQuiz = catchAsync(async (req, res, next) => {
   const quiz = await Quiz.findByIdAndUpdate(req.params.id, {
-    $set: { active: false },
+    active: false,
+    deletedAt: Date.now(),
   });
 
   if (!quiz) {
