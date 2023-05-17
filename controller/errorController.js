@@ -33,12 +33,6 @@ const sendErrorDev = (err, req, res) => {
     }
     return res.status(err.statusCode).json(errorResponse);
   }
-
-  console.error("ERROR!!", err);
-  return res.status(err.statusCode).render("error", {
-    title: "Something went wrong!",
-    msg: err.message,
-  });
 };
 
 const sendErrorProd = (err, req, res) => {
@@ -54,19 +48,6 @@ const sendErrorProd = (err, req, res) => {
     console.error("ERROR!!", err);
     return res.status(500).json(errorResponse);
   }
-
-  if (err.isOperational) {
-    return res.status(err.statusCode).render("error", {
-      title: "Something went wrong!",
-      msg: err.message,
-    });
-  }
-
-  console.error("ERROR!!", err);
-  return res.status(err.statusCode).render("error", {
-    title: "Something went wrong!",
-    msg: "Please try again later.",
-  });
 };
 
 module.exports = (err, req, res, next) => {
@@ -81,7 +62,8 @@ module.exports = (err, req, res, next) => {
 
     if (error.name === "CastError") error = handleCastErrorDB(error);
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
-    if (error.name === "ValidationError") error = handleValidationErrorDB(error);
+    if (error.name === "ValidationError")
+      error = handleValidationErrorDB(error);
 
     sendErrorProd(error, req, res);
   }

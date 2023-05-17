@@ -1,5 +1,5 @@
-const Question = require("../models/questionModel");
-const Quiz = require("../../quiz/models/quizModel");
+const Question = require("../model/questionModel");
+const Quiz = require("../../quiz/model/quizModel");
 const AppError = require("../../../utils/appError");
 const catchAsync = require("../../../utils/catchAsync");
 const glob = require("../../../utils/responseHandler");
@@ -12,10 +12,8 @@ exports.createQuestion = catchAsync(async (req, res, next) => {
     options: req.body.options,
     score: req.body.score,
     quiz: req.params.id,
+    createdBy: req.session.userId,
   });
-
-  if (req.body.type === "trueFalse") {
-  }
 
   const quiz = await Quiz.findById(req.params.id);
 
@@ -25,6 +23,11 @@ exports.createQuestion = catchAsync(async (req, res, next) => {
   await question.save();
   quiz.questions.push(question);
   await quiz.save();
+
+  question.active = undefined;
+  question.createdAt = undefined;
+  question.updatedAt = undefined;
+  question.__v = undefined;
 
   glob.send(res, 201, "Question created successfully!", question);
 });

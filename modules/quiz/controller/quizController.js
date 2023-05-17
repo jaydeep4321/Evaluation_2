@@ -1,4 +1,4 @@
-const Quiz = require("../models/quizModel");
+const Quiz = require("../model/quizModel");
 const catchAsync = require("../../../utils/catchAsync");
 const AppError = require("../../../utils/appError");
 const glob = require("../../../utils/responseHandler");
@@ -10,23 +10,31 @@ exports.createQuiz = catchAsync(async (req, res, next) => {
     description: req.body.description,
     duration: req.body.duration,
     questions: req.body.questions,
+    createdBy: req.session.userId,
   });
 
   await quiz.save();
+
+  quiz.active = undefined;
+  quiz.createdAt = undefined;
+  quiz.updatedAt = undefined;
+  quiz.__v = undefined;
 
   glob.send(res, 201, "Quiz has been created!", quiz);
 });
 
 //=================GET ALL QUIZ==============//
 exports.getAllQuizzes = catchAsync(async (req, res, next) => {
-  const quizzes = await Quiz.find().populate("questions");
+  const quizzes = await Quiz.find().populate("questions createdBy");
 
   glob.send(res, 200, "Quizzes found!", quizzes);
 });
 
 //=================GET QUIZ BY ID============//
 exports.getQuiz = catchAsync(async (req, res, next) => {
-  const quiz = await Quiz.findById(req.params.id).populate("questions");
+  const quiz = await Quiz.findById(req.params.id).populate(
+    "questions createdBy"
+  );
 
   if (!quiz) {
     return next(new AppError("Quiz not found", 404));

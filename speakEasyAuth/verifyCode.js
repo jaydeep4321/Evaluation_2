@@ -28,7 +28,6 @@ exports.verifyOtp = catchAsync(async (req, res, next) => {
   req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
   req.session.userId = user._id;
 
-  // Clear sensitive user properties before sending the response
   user.password = undefined;
   user.secret = undefined;
   user.role = undefined;

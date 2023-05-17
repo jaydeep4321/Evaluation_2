@@ -10,10 +10,6 @@ const quizSchema = new mongoose.Schema(
     description: {
       type: String,
     },
-    duration: {
-      type: Number,
-      default: 0,
-    },
     questions: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -45,6 +41,15 @@ const quizSchema = new mongoose.Schema(
 
 quizSchema.pre(/^find/, function (next) {
   this.find({ active: { $ne: false } });
+
+  next();
+});
+
+quizSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "createdBy",
+    select: "-__v -password -secret -active -role",
+  });
 
   next();
 });

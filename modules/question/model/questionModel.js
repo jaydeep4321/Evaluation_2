@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const constant = require("../../../utils/constants");
-const validator = require("validator");
 
 const questionSchema = new mongoose.Schema(
   {
@@ -30,6 +29,10 @@ const questionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: constant.QUIZ_MODEL,
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: constant.USER_MODEL,
+    },
     active: {
       type: Boolean,
       default: true,
@@ -51,6 +54,15 @@ const questionSchema = new mongoose.Schema(
 
 questionSchema.pre(/^find/, function (next) {
   this.find({ active: { $ne: false } });
+
+  next();
+});
+
+questionSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "createdBy",
+    select: "-__v -password -secret -active -role",
+  });
 
   next();
 });

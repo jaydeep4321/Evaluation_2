@@ -1,11 +1,11 @@
-const User = require("../models/userModel");
+const User = require("../model/userModel");
 const catchAsync = require("../../../utils/catchAsync");
 const AppError = require("../../../utils/appError");
 const glob = require("../../../utils/responseHandler");
 
 //====================GET ALL USER=================//
 exports.getAllUser = catchAsync(async (req, res, next) => {
-  const users = await User.find();
+  const users = await User.find().select("-password -secret");
 
   if (!users) {
     return next(new AppError("There is no user!", 404));

@@ -1,5 +1,5 @@
 const express = require("express");
-const quizController = require("../controllers/quizController");
+const quizController = require("../controller/quizController");
 const validateQuiz = require("../../../validation/quizValidation/quizValidator");
 const validateUpdateQuiz = require("../../../validation/quizValidation/updateQuizValidation");
 const authController = require("../../../controller/authController");
@@ -13,7 +13,6 @@ router.use(authController.protected);
 router.route("/").get(quizController.getAllQuizzes);
 
 router.route("/:id").get(quizController.getQuiz);
-
 
 //================RESTRICTED ROUTES FROM HERE==============//
 
